@@ -694,7 +694,8 @@ Status CreateEncoderInputs(
     AllocatorPtr allocator,
     OrtValue& encoder_input_ids,
     OrtValue& encoder_attention_mask,
-    OrtValue& decoder_input_ids) {
+    OrtValue& decoder_input_ids,
+    const OrtValue* original_decoder_input_ids_value) {
   const TensorShape& input_ids_shape = original_encoder_input_ids->Shape();
   ORT_ENFORCE(input_ids_shape.NumDimensions() == 2);
   const int64_t& batch_size = input_ids_shape[0];
@@ -741,8 +742,9 @@ Status CreateEncoderInputs(
     }
   }
 
+
   // decoder_input_ids is optional.
-  if (start_token_id >= 0) {
+  if (original_decoder_input_ids_value == nullptr && start_token_id >= 0) {
     // Filled decoder_input_ids with start token ID
     int64_t dims[] = {batch_size, 1};
     TensorShape decoder_input_ids_shape(&dims[0], 2);
@@ -751,8 +753,18 @@ Status CreateEncoderInputs(
     for (int i = 0; i < batch_size; i++, data++) {
       *data = start_token_id;
     }
+  } else {
+    // decoder_input_ids is of shape (batch_size, initial_sequence_length)
+    // Example: [[ decoder start token (i.e. start of transcript), language token, task token, timestamp token ]]
+    const Tensor* original_decoder_input_ids = &(original_decoder_input_ids_value->Get<Tensor>());
+    const TensorShape& original_decoder_input_ids_shape = original_decoder_input_ids->Shape();
+    ORT_ENFORCE(original_decoder_input_ids_shape.NumDimensions() == 2);
+    Tensor::InitOrtValue(element_type,
+                         original_decoder_input_ids_shape,
+                         const_cast<Tensor*>(original_decoder_input_ids)->MutableData<int32_t>(),
+                         allocator->Info(),
+                         decoder_input_ids);
   }
-
   return Status::OK();
 }
 

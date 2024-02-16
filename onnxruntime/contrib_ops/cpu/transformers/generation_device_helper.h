@@ -160,7 +160,8 @@ using CreateEncoderInputsFunc = std::function<Status(
     AllocatorPtr allocator,
     OrtValue& encoder_input_ids,
     OrtValue& encoder_attention_mask,
-    OrtValue& decoder_input_ids)>;
+    OrtValue& decoder_input_ids,
+    const OrtValue* original_decoder_input_ids_value)>;
 
 // Update decoder inputs given decoder outputs of last iteration (for encoder-decoder model like T5).
 template <typename T>
@@ -345,7 +346,8 @@ Status CreateEncoderInputs(
     AllocatorPtr allocator,
     OrtValue& encoder_input_ids,
     OrtValue& encoder_attention_mask,
-    OrtValue& decoder_input_ids);
+    OrtValue& decoder_input_ids,
+    const OrtValue* original_decoder_input_ids_value);
 
 // Update decoder inputs given decoder outputs of last iteration.
 template <typename T>

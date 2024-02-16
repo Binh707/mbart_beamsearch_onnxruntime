@@ -44,6 +44,14 @@ void BeamSearchParameters::ParseFromInputs(OpKernelContext* context) {
     }
   } else {
     ORT_ENFORCE(dims.size() == 2, "input_ids shall have 2 dimensions. Got ", dims.size());
+    const Tensor* decoder_input_ids = context->Input<Tensor>(10);
+    if (decoder_input_ids == nullptr) {
+      initial_decode_sequence_length = 1;
+    } else {
+      const auto& decoder_dims = decoder_input_ids->Shape().GetDims();
+      initial_decode_sequence_length = static_cast<int>(decoder_dims[1]);
+      ORT_ENFORCE(decoder_dims.size() == 2, "decoder_input_ids shall have 2 dimensions. Got ", decoder_dims.size());
+    }
   }
   batch_size = static_cast<int>(dims[0]);
 
@@ -70,7 +78,7 @@ void BeamSearchParameters::ParseFromInputs(OpKernelContext* context) {
     sequence_length = initial_decode_sequence_length;
   } else {
     // For T5, output sequence starts with decoder_start_token_id, so its sequence length is 1
-    sequence_length = 1;
+    sequence_length = initial_decode_sequence_length;
   }
 
   auto* max_length_tensor = context->Input<Tensor>(1);

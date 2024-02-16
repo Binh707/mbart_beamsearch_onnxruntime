@@ -108,9 +108,6 @@ Status BeamSearchT5<T>::Execute(const FeedsFetchesManager& encoder_feeds_fetches
   auto status = Status::OK();
 
   const BeamSearchParameters* parameters = this->parameters_;
-  if (parameters->model_type == IGenerationParameters::kModelTypeT5) {
-    ORT_ENFORCE(parameters->sequence_length == 1);
-  }
 
   // Allocate output tensors.
   int64_t sequences_dims[] = {parameters->batch_size, parameters->num_return_sequences, parameters->max_length};
@@ -141,6 +138,7 @@ Status BeamSearchT5<T>::Execute(const FeedsFetchesManager& encoder_feeds_fetches
   const Tensor& encoder_input_ids = encoder_input_ids_value->Get<Tensor>();
 
   const OrtValue* encoder_attn_mask_value = this->context_.GetInputOrtValue(9);
+  const OrtValue* initial_decoder_input_ids_value = this->context_.GetInputOrtValue(10);
 
   BeamSearchCpuState cpu_state{*parameters,
                                this->cpu_allocator_,
@@ -161,7 +159,9 @@ Status BeamSearchT5<T>::Execute(const FeedsFetchesManager& encoder_feeds_fetches
       this->add_to_feeds_func_,
       buffer,
       decoder_input_ids,
-      this->ort_stream_));
+      this->ort_stream_,
+      initial_decoder_input_ids_value));
+
 
 #ifdef DEBUG_NODE_INPUTS_OUTPUTS
   const_cast<SessionState&>(this->encoder_session_state_).IncrementGraphExecutionCounter();
