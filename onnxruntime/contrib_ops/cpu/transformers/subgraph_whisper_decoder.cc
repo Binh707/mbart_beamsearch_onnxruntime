@@ -198,8 +198,8 @@ Status WhisperDecoderSubgraph::CreateInitialFeeds(
   decoder_feeds.reserve(static_cast<size_t>(num_subgraph_inputs) + static_cast<size_t>(num_implicit_inputs));
   decoder_feeds.push_back(input_ids);
 
-  ORT_RETURN_IF(past_present_share_buffer_ == true, "past_present_share_buffer_ is true ", cur_len);
-  ORT_RETURN_IF(past_present_share_buffer_ == false, "past_present_share_buffer_ is false ", cur_len);
+  //ORT_RETURN_IF(past_present_share_buffer_ == true, "past_present_share_buffer_ is true ", cur_len);
+  //ORT_RETURN_IF(past_present_share_buffer_ == false, "past_present_share_buffer_ is false ", cur_len);
 
   if (!past_present_share_buffer_) {
     past_present_share_buffer_max_seq_len = 0;
